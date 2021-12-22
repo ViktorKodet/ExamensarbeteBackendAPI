@@ -1,43 +1,40 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using API.Contexts;
+using API.Models;
+using API.Models.DTOs;
+using Mapster;
+using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace API.Controllers
+namespace API.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class CustomerOrderController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class CustomerOrderController : ControllerBase
+    private readonly HakimDbContext dbContext;
+
+    public CustomerOrderController(HakimDbContext dbContext)
     {
-        // GET: api/<CustomerOrderController>
-        [HttpGet]
-        public IEnumerable<string> Get()
+        this.dbContext = dbContext;
+    }
+
+    [HttpPost]
+    public IActionResult AddOrder([FromBody] CustomerOrderCreationDTO input)
+    {
+        City city = dbContext.Cities.FirstOrDefault(c => c.Name == input.Customer.City);
+        if (city is null)
         {
-            return new string[] { "value1", "value2" };
+            city = new City() { Name = input.Customer.City };
+            dbContext.Cities.Add(city);
         }
 
-        // GET api/<CustomerOrderController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
-
-        // POST api/<CustomerOrderController>
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
-        }
-
-        // PUT api/<CustomerOrderController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE api/<CustomerOrderController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
+        var customer = input.Customer.Adapt<Customer>();
+        customer.City = city;
+        var co = new CustomerOrder() { Customer = customer, ProductQuantities = input.Products };
+        dbContext.Add(customer);
+        dbContext.Add(co);
+        dbContext.SaveChanges();
+        return Ok("Order added.");
     }
 }

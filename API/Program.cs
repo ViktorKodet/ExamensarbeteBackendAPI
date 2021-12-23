@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("CorsPolicy", builder => builder.WithOrigins("*"));
+    options.AddPolicy("CorsPolicy", builder => builder.WithOrigins("*").WithHeaders("*"));
 });
 builder.Services.AddDbContext<HakimDbContext>(options =>
 {

@@ -1,10 +1,15 @@
 ﻿//using System.Data.Entity;
 using API.Contexts;
 using API.Models;
+using API.ResiliencePolicies;
 using Mapster;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Polly;
+using Polly.Retry;
+using Polly.Wrap;
+using Timeout = API.ResiliencePolicies.Timeout;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -16,17 +21,21 @@ namespace API.Controllers;
 public class ProductController : ControllerBase
 {
     private readonly HakimDbContext dbContext;
-
+    private readonly PolicyWrap _policyWrap;
     public ProductController(HakimDbContext dbContext)
     {
         this.dbContext = dbContext;
+        var retry = Retry.GetPolicy();
+        var timeout = Timeout.GetPolicy();
+        _policyWrap = Policy.Wrap(retry, timeout);
     }
 
     [HttpPost]
     public IActionResult AddProduct([FromBody] ProductCreationDTO p)
     {
-        var company = dbContext.Companies.FirstOrDefault(c => c.Id == p.CompanyId);
-        var category = dbContext.Categories.FirstOrDefault(c => c.Id == p.CategoryId);
+        var company = _policyWrap.Execute(() => dbContext.Companies.FirstOrDefault(c => c.Id == p.CompanyId));
+
+        var category = _policyWrap.Execute(() => dbContext.Categories.FirstOrDefault(c => c.Id == p.CategoryId));
         if (company is null)
         {
             return BadRequest($"No company with id {p.CompanyId} found. Please validate input and try again.");
@@ -39,29 +48,29 @@ public class ProductController : ControllerBase
         var product = p.Adapt<Product>();
         product.Company = company;
         product.Category = category;
-        dbContext.Products.Add(product);
-        dbContext.SaveChanges();
+        _policyWrap.Execute(() => dbContext.Products.Add(product));
+        _policyWrap.Execute(() => dbContext.SaveChanges());
         return Ok("Product added.");
     }
 
     [HttpPut("toggle/id")]
     public IActionResult ToggleProductActive(long id)
     {
-        var product = dbContext.Products.FirstOrDefault(x => x.Id == id);
+        var product = _policyWrap.Execute(() => dbContext.Products.FirstOrDefault(x => x.Id == id));
         if (product is null)
         {
             return BadRequest($"No product with Id {id} found. Please validate your input and try again.");
         }
 
         product.Active = !product.Active;
-        dbContext.SaveChanges();
+        _policyWrap.Execute(() => dbContext.SaveChanges());
         return Ok($"{product.Name} active-status successfully updated to {product.Active}.");
     }
 
     [HttpPut("restock/id/quantity")]
     public IActionResult RestockProductQuantity(long id, int quantity)
     {
-        var product = dbContext.Products.FirstOrDefault(x => x.Id == id);
+        var product = _policyWrap.Execute(() => dbContext.Products.FirstOrDefault(x => x.Id == id));
         if (product is null)
         {
             return BadRequest($"No product with Id {id} found. Please validate your input and try again.");
@@ -69,18 +78,19 @@ public class ProductController : ControllerBase
 
         var previousQuantity = product.Quantity;
         product.Quantity += quantity;
-        dbContext.SaveChanges();
+        _policyWrap.Execute(() => dbContext.SaveChanges());
         return Ok($"{product.Name} stock increased from {previousQuantity} to {product.Quantity}.");
     }
 
     [HttpGet("all/active")]
     public IActionResult GetAllActiveProducts()
     {
-        return Ok(dbContext.Products
+        return _policyWrap.Execute(() => Ok(dbContext.Products
+            .AsNoTracking()
             .Where(p => p.Active)
             .Include(p => p.Category)    //TODO category och company kommer tillbaks som null
             .Include(p => p.Company)    //TODO löste genom att byta till från system.data.entity till efcore
-            .ToList());
+            .ToList()));
 
         /*
          * Funkar bra på swagger etc men funkar inte när jag försöker hämta från hemsidan.
@@ -93,8 +103,8 @@ public class ProductController : ControllerBase
     [HttpGet("all/inactive")]
     public IActionResult GetAllInactiveProducts()
     {
-        return Ok(dbContext.Products
+        return _policyWrap.Execute(() => Ok(dbContext.Products
             .Where(p => !p.Active)
-            .ToList());
+            .ToList()));
     }
 }

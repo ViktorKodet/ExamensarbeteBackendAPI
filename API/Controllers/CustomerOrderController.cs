@@ -47,11 +47,19 @@ public class CustomerOrderController : ControllerBase
             _policyWrap.Execute(() => productQuantities.Add(new ProductQuantity(){Quantity = pqd.Quantity, Product = dbContext.Products.Where(p => p.Id == pqd.ProductId).FirstOrDefault()}));
         }
 
+        
+
         var customer = input.Customer.Adapt<Customer>(CustomerMapping.GetCustomerCreationDtoToCustomerMappingConfig());
         customer.City = city;
         var co = new CustomerOrder() { Customer = customer, ProductQuantities = productQuantities };  //TODO något sexigt sätt att få productquantities från bara productid och quantity
         _policyWrap.Execute(() => dbContext.Add(customer));
         _policyWrap.Execute(() => dbContext.Add(co));
+
+        foreach (var pqd in productQuantities)
+        {
+            pqd.Product.Quantity -= pqd.Quantity;
+        }
+
         _policyWrap.Execute(() => dbContext.SaveChanges());
         return Ok("Order added.");
     }

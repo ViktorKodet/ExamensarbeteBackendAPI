@@ -10,6 +10,8 @@ using Polly;
 using Polly.Retry;
 using Polly.Wrap;
 using Timeout = API.ResiliencePolicies.Timeout;
+using API.Configs;
+using API.Models.DTOs;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -106,5 +108,42 @@ public class ProductController : ControllerBase
         return _policyWrap.Execute(() => Ok(dbContext.Products
             .Where(p => !p.Active)
             .ToList()));
+    }
+
+    //Ta bort det man inte vill uppdatera i swagger
+    [HttpPut("update/id")]
+    public IActionResult UpdateProduct(long id, [FromBody] ProductUpdateDTO input)
+    {
+        
+        var product = _policyWrap.Execute(() => dbContext.Products
+            .FirstOrDefault(p => p.Id == id));
+        if (product is null)
+        {
+            return BadRequest($"No product found with id {id}");
+        }
+        if (input.CategoryId is not null)
+        {
+            var category =
+                _policyWrap.Execute(() => dbContext.Categories.FirstOrDefault(c => c.Id == input.CategoryId));
+            if (category is null)
+            {
+                return BadRequest($"No category found with id {input.CategoryId}");
+            }
+            product.Category = category;
+        }
+        if (input.CompanyId is not null)
+        {
+            var company = _policyWrap.Execute(() => dbContext.Companies.FirstOrDefault(c => c.Id == input.CompanyId));
+            if (company is null)
+            {
+                return BadRequest($"No company found with id {input.CompanyId}");
+            }
+
+            product.Company = company;
+        }
+
+        input.Adapt(product, ProductUpdateMapping.GetProductUpdateMappingConfig());
+        _policyWrap.Execute(() => dbContext.SaveChanges());
+        return Ok("Product updated.");
     }
 }

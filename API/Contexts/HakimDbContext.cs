@@ -1,4 +1,5 @@
-﻿using API.Models;
+﻿using System.Data.Common;
+using API.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Contexts;
@@ -16,11 +17,12 @@ public class HakimDbContext : DbContext
 
     public HakimDbContext(DbContextOptions<HakimDbContext> options) : base(options)
     {
-
+        
     }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        optionsBuilder.UseSqlServer(@"Data Source=localhost,1433;Database=HakimDb;User ID=sa;Password=Password123");
-    }
+
+    //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    //{
+    //    optionsBuilder.UseSqlServer(@"Data Source=localhost,1433;Database=HakimDb;User ID=sa;Password=Password123");
+    //}
 }

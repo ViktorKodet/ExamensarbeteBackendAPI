@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using API.Contexts;
+using API.Controllers;
 using API.Models;
+using API.Models.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
@@ -75,6 +77,41 @@ public class CustomerOrderControllerTest
     [Fact]
     public void ShouldAddOrder()
     {
+        var dbContext = SetUpContext();
+        var controller = new CustomerOrderController(dbContext);
 
+        var customer = new CustomerCreationDTO()
+        {
+            FirstName = "Jens", 
+            LastName = "Schmeid", 
+            Adress = "Jensgatan 13", 
+            City = "Uppsala",
+            Email = "Jens.jens@gmail.com", 
+            PhoneNumber = "1234567890", 
+            ZipCode = "12345"
+        };
+
+        var productQuantities = new List<ProductQuantityDTO>()
+        {
+            new ProductQuantityDTO() { ProductId = 1, Quantity = 5 },
+            new ProductQuantityDTO() { ProductId = 2, Quantity = 10 }
+        };
+
+        var output = controller.AddOrder(new CustomerOrderCreationDTO()
+            { Customer = customer, Products = productQuantities });
+
+        var order = dbContext.CustomerOrders.FirstOrDefault(c => c.Id == 1);
+        Assert.Equal(1, order.Id);
+        Assert.Equal("Jens", order.Customer.FirstName);
+        Assert.Contains(order.ProductQuantities, p => p.Product.Id == 1);
+        Assert.Contains(order.ProductQuantities, p => p.Quantity == 10);
+        Assert.DoesNotContain(order.ProductQuantities, p => p.Quantity == 15);
+
+        var customers = dbContext.Customers.ToList();
+        Assert.Contains(customers, c => c.FirstName == "Jens");
+        Assert.Contains(customers, c => c.LastName == "Schmeid");
+
+        var cities = dbContext.Cities.ToList();
+        Assert.Contains(cities, c => c.Name == "Uppsala");
     }
 }

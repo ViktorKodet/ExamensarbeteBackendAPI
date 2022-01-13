@@ -47,19 +47,19 @@ public class CompanyController : ControllerBase
     }
 
 
-    [HttpPut]
-    public IActionResult UpdateCompany([FromBody] Company c)
+    [HttpPut("update/id/name")]
+    public IActionResult UpdateCompany(long id, string name)
     {
-        var company = _policyWrap.Execute(() => dbContext.Companies.FirstOrDefault(x => x.Id == c.Id));
+        var company = _policyWrap.Execute(() => dbContext.Companies.FirstOrDefault(x => x.Id == id));
         if (company is null)
         {
-            return BadRequest($"No company with Id {c.Id} found. Please validate your input and try again.");
+            return BadRequest($"No company with Id {id} found. Please validate your input and try again.");
         }
 
         var oldName = company.Name;
-        company.Name = c.Name;
+        company.Name = name;
         _policyWrap.Execute(() => dbContext.SaveChanges());
-        return Ok($"{oldName} successfully updated to {c.Name}.");
+        return Ok($"{oldName} successfully updated to {name}.");
     }
 
 

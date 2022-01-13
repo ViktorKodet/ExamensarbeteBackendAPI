@@ -22,7 +22,6 @@ public class CategoryControllerTest
             .Options;
 
         var dbContext = new HakimDbContext(options);
-        //var dbContext = A.Fake<HakimDbContext>();
 
         Seed(dbContext);
         return dbContext;

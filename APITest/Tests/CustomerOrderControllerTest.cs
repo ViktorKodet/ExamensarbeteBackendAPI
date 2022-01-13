@@ -16,11 +16,10 @@ public class CustomerOrderControllerTest
     private HakimDbContext SetUpContext()
     {
         var options = new DbContextOptionsBuilder<HakimDbContext>()
-            .UseInMemoryDatabase(databaseName: "HakimDb")
+            .UseInMemoryDatabase(databaseName: $"HakimDb{Guid.NewGuid()}")
             .Options;
 
         var dbContext = new HakimDbContext(options);
-        //var dbContext = A.Fake<HakimDbContext>();
 
         Seed(dbContext);
         return dbContext;

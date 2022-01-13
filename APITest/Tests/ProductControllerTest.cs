@@ -20,7 +20,7 @@ public class ProductControllerTest
     private HakimDbContext SetUpContext()
     {
         var options = new DbContextOptionsBuilder<HakimDbContext>()
-            .UseInMemoryDatabase(databaseName: "HakimDb")
+            .UseInMemoryDatabase(databaseName: $"HakimDb{Guid.NewGuid()}")
             .Options;
 
         var dbContext = new HakimDbContext(options);
@@ -97,7 +97,7 @@ public class ProductControllerTest
         var products = (OkObjectResult)controller.GetAllInactiveProducts();
         var result = (List<Product>)products.Value;
         Assert.Equal(1, result.Count);
-        Assert.Equal("IPhone", result[0].Name);
+        Assert.Contains(result, p => p.Name == "IPhone");
 
     }
 
@@ -107,16 +107,14 @@ public class ProductControllerTest
         var dbContext = SetUpContext();
         var controller = new ProductController(dbContext);
 
-        var products = (OkObjectResult)controller.GetAllActiveProducts();
-        var result = (List<Product>)products.Value;
-        Assert.Equal("Coca cola", result[0].Name);
+        var products = dbContext.Products.ToList();
+        Assert.Contains(products, p => p.Name == "Coca cola");
 
         var output = controller.UpdateProduct(1, new ProductUpdateDTO() { Name = "Coca cola zero" });
         dbContext.SaveChanges();
 
-        products = (OkObjectResult)controller.GetAllActiveProducts();
-        result = (List<Product>)products.Value;
-        Assert.Equal("Coca cola zero", result[0].Name);
+        products = dbContext.Products.ToList();
+        Assert.Contains(products, p => p.Name == "Coca cola zero");
 
     }
     [Fact]
@@ -136,9 +134,8 @@ public class ProductControllerTest
         });
         dbContext.SaveChanges();
 
-        var products = (OkObjectResult)controller.GetAllInactiveProducts();
-        var result = (List<Product>)products.Value;
-        Assert.Equal("Coca cola cherry", result[1].Name);
+        var products = dbContext.Products.ToList();
+        Assert.Contains(products, p => p.Name == "Coca cola cherry");
 
     }
 
@@ -152,13 +149,11 @@ public class ProductControllerTest
         output = controller.ToggleProductActive(2);
         dbContext.SaveChanges();
 
-        var products = (OkObjectResult)controller.GetAllActiveProducts();
-        var result = (List<Product>)products.Value;
-        Assert.Equal("IPhone", result[0].Name);
+        var products = dbContext.Products.Where(p => p.Active == true).ToList();
+        Assert.Contains(products, p => p.Name == "IPhone");
 
-        products = (OkObjectResult)controller.GetAllInactiveProducts();
-        result = (List<Product>)products.Value;
-        Assert.Equal("Coca cola", result[0].Name);
+        products = dbContext.Products.Where(p => p.Active == false).ToList();
+        Assert.Contains(products, p => p.Name == "Coca cola");
     }
 
     [Fact]
@@ -170,8 +165,7 @@ public class ProductControllerTest
         var output = controller.RestockProductQuantity(1, 5);
         dbContext.SaveChanges();
 
-        var products = (OkObjectResult)controller.GetAllActiveProducts();
-        var result = (List<Product>)products.Value;
-        Assert.Equal(10, result[0].Quantity);
+        var product = dbContext.Products.FirstOrDefault(p => p.Id == 1);
+        Assert.Equal(10, product.Quantity);
     }
 }

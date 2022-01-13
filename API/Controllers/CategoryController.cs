@@ -71,18 +71,18 @@ public class CategoryController : ControllerBase
         return Ok($"{category.Name} active-status successfully updated to {category.Active}.");
     }
 
-    [HttpPut]
-    public IActionResult UpdateCategory([FromBody] Category c)
+    [HttpPut("update/id/name")]
+    public IActionResult UpdateCategory(long id, string name)
     {
-        var category = _policyWrap.Execute(() => dbContext.Categories.FirstOrDefault(x => x.Id == c.Id));
+        var category = _policyWrap.Execute(() => dbContext.Categories.FirstOrDefault(x => x.Id == id));
         if (category is null)
         {
-            return BadRequest($"No category with Id {c.Id} found. Please validate your input and try again.");
+            return BadRequest($"No category with Id {id} found. Please validate your input and try again.");
         }
 
         var oldName = category.Name;
-        category.Name = c.Name;
+        category.Name = name;
         _policyWrap.Execute(() => dbContext.SaveChanges());
-        return Ok($"{oldName} successfully updated to {c.Name}.");
+        return Ok($"{oldName} successfully updated to {name}.");
     }
 }

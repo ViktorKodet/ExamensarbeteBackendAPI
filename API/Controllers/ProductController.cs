@@ -36,12 +36,12 @@ public class ProductController : ControllerBase
     public IActionResult AddProduct([FromBody] ProductCreationDTO p)
     {
         var company = _policyWrap.Execute(() => dbContext.Companies.FirstOrDefault(c => c.Id == p.CompanyId));
-
-        var category = _policyWrap.Execute(() => dbContext.Categories.FirstOrDefault(c => c.Id == p.CategoryId));
         if (company is null)
         {
             return BadRequest($"No company with id {p.CompanyId} found. Please validate input and try again.");
         }
+
+        var category = _policyWrap.Execute(() => dbContext.Categories.FirstOrDefault(c => c.Id == p.CategoryId));
         if (category is null)
         {
             return BadRequest($"No category with id {p.CategoryId} found. Please validate input and try again.");

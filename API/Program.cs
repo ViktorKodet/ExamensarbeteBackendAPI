@@ -24,7 +24,6 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-//app.UseSerilogRequestLogging();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -33,8 +32,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-//app.UseDefaultFiles();
-//app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 

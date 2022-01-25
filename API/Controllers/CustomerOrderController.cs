@@ -51,7 +51,7 @@ public class CustomerOrderController : ControllerBase
 
         var customer = input.Customer.Adapt<Customer>(CustomerMapping.GetCustomerCreationDtoToCustomerMappingConfig());
         customer.City = city;
-        var co = new CustomerOrder() { Customer = customer, ProductQuantities = productQuantities };  //TODO något sexigt sätt att få productquantities från bara productid och quantity
+        var co = new CustomerOrder() { Customer = customer, ProductQuantities = productQuantities };
         _policyWrap.Execute(() => dbContext.Add(customer));
         _policyWrap.Execute(() => dbContext.Add(co));
 

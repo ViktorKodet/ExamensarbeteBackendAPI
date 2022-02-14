@@ -21,8 +21,4 @@ public class HakimDbContext : DbContext
     }
 
 
-    //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    //{
-    //    optionsBuilder.UseSqlServer(@"Data Source=localhost,1433;Database=HakimDb;User ID=sa;Password=Password123");
-    //}
 }

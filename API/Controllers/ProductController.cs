@@ -94,12 +94,6 @@ public class ProductController : ControllerBase
             .Include(p => p.Company)    //TODO löste genom att byta till från system.data.entity till efcore
             .ToList()));
 
-        /*
-         * Funkar bra på swagger etc men funkar inte när jag försöker hämta från hemsidan.
-         * läst lite om CORS och skit, kan också ha med typ authorisering eller något. ev att man inte får ha https eller något
-         * får klura vidare, se om jag kan få bättre felkoder någonstans på hemsidan eller i vsc.
-         * testa att öppna konsollen på hemsidan i browsern eller något, kommer inte ihåg hur man gör
-         */
     }
 
     [HttpGet("all/inactive")]
@@ -110,7 +104,7 @@ public class ProductController : ControllerBase
             .ToList()));
     }
 
-    //Ta bort det man inte vill uppdatera i swagger
+
     [HttpPut("update/id")]
     public IActionResult UpdateProduct(long id, [FromBody] ProductUpdateDTO input)
     {

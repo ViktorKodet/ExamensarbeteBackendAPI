@@ -44,7 +44,7 @@ public class CustomerOrderController : ControllerBase
         var productQuantities = new List<ProductQuantity>();
         foreach (var pqd in input.Products)
         {
-            _policyWrap.Execute(() => productQuantities.Add(new ProductQuantity(){Quantity = pqd.Quantity, Product = dbContext.Products.Where(p => p.Id == pqd.ProductId).FirstOrDefault()}));
+            _policyWrap.Execute(() => productQuantities.Add(new ProductQuantity(){Quantity = pqd.Quantity, Product = dbContext.Products.Where(p => p.Id == pqd.ProductId).FirstOrDefault()}));  //Plenty of room for improvement
         }
 
         
